@@ -31,7 +31,7 @@ const YOUTUBE_WIN_ID = 'JNwdcH1aD28';
 const YOUTUBE_LOSE_ID = 'dtIpzERzNIw';
 
 // 動画の再生時間 (YouTubeプレイヤー側で再生が終わるのを検知できないため、時間で制御します)
-const YOUTUBE_DURATION_MS = 21000; // 21秒に設定 (動画の長さに合わせて調整)
+const YOUTUBE_DURATION_MS = 23000; // 23秒に設定 (動画の長さに合わせて調整)
 
 
 let isSpinning = false;
@@ -82,7 +82,7 @@ function announceWin(resultValue) {
     if (resultValue === '7') {
         messageDisplay.textContent = '🎉🎉 777 MEGA JACKPOT!! 🎉🎉';
     } else {
-        messageDisplay.textContent = `おめでとう! ゾロ目です!`;
+        messageDisplay.textContent = `おめでとう! 昇格成功です!`;
     }
     triggerSpecialEffect();
 
