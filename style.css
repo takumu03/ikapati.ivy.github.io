@@ -1,0 +1,233 @@
+/* -------------------------------------- */
+/* タイトル「イカパチ」のスタイル */
+/* -------------------------------------- */
+#title-area {
+    /* デフォルト設定 (維持) */
+    font-size: 72px;
+    font-weight: bold;
+    /* ★はみ出し防止のため、基本的にこの行は削除しますが、
+       タイトルを1行で表示したい場合は、次の行でoverflowを設定します。
+       今回はスマホで折り返すことを許可します。 */
+    /* white-space: nowrap; */
+
+    /* スプラトゥーン風に合わせた色と影の設定 (維持) */
+    color: #000000;
+    text-shadow:
+        -3px -3px 0 #00CC00,
+        3px -3px 0 #00CC00,
+        -3px 3px 0 #00CC00,
+        3px 3px 0 #00CC00,
+        6px 6px 0 #00CC00;
+
+    text-align: center;
+    margin-bottom: 30px;
+    font-family: "Anton", sans-serif;
+}
+
+body {
+    /* 背景画像設定（維持） */
+    background-image: url('images/haikei.jpeg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-attachment: fixed;
+
+    /* 画面配置のための一般的な設定（維持） */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    /* ★修正点1: bodyのpaddingを削除または最小化し、コンテンツ幅の制約をなくす */
+    padding: 10px;
+    /* 最小限のパディングに抑える */
+    margin: 0;
+
+    min-height: 100vh;
+    /* ★修正点2: 横方向のはみ出しを強制的に隠す */
+    overflow-x: hidden;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.slot-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    /* ★修正点3: flexboxが親要素からはみ出さないように最大幅を設定 */
+    max-width: 100%;
+}
+
+/* -------------------------------------- */
+/* .reel (画像表示に最適化) */
+/* -------------------------------------- */
+.reel {
+    width: 80px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 100px;
+    font-size: 0;
+
+    text-align: center;
+    border: 3px solid #333;
+    margin: 0 10px;
+    overflow: hidden;
+
+    /* あなたのカスタム背景画像を維持 */
+    background-image: url('images/ao.png');
+    background-color: transparent;
+    background-size: cover;
+    background-position: center;
+    color: transparent;
+}
+
+/* スロット内の画像 */
+.reel img {
+    max-width: 80%;
+    max-height: 80%;
+    object-fit: contain;
+    display: block;
+}
+
+
+#message {
+    font-size: 32px;
+    text-align: center;
+    color: red;
+    min-height: 40px;
+    margin-top: 30px;
+    margin-bottom: 50px;
+    font-weight: bold;
+    /* メッセージを目立たせる */
+}
+
+/* -------------------------------------- */
+/* 💻 PC/タブレット表示向けの設定 (769px以上) */
+/* -------------------------------------- */
+@media (min-width: 769px) {
+
+    #title-area {
+        font-size: 84px;
+        /* PCでの影のサイズを標準のまま維持 */
+        text-shadow:
+            -3px -3px 0 #00CC00,
+            3px -3px 0 #00CC00,
+            -3px 3px 0 #00CC00,
+            3px 3px 0 #00CC00,
+            6px 6px 0 #00CC00;
+    }
+
+    .reel {
+        width: 100px;
+        height: 120px;
+        margin: 0 15px;
+    }
+
+    .reel img {
+        max-width: 90%;
+        max-height: 90%;
+    }
+
+    #message,
+    #startStopButton {
+        margin-top: 15px;
+        font-size: 36px;
+    }
+}
+
+/* -------------------------------------- */
+/* 📱 スマートフォン対応 (画面幅600px以下) */
+/* -------------------------------------- */
+@media (max-width: 600px) {
+
+    #title-area {
+        /* タイトルサイズをさらに縮小し、スマホに最適化 */
+        font-size: 44px;
+        /* 50pxから44pxに縮小 */
+        /* ★修正点4: white-space: nowrap; を削除し、必要に応じて折り返すのを許可します */
+        white-space: normal;
+
+        /* 影のサイズも最小限に縮小 */
+        text-shadow:
+            -1px -1px 0 #00CC00,
+            1px -1px 0 #00CC00,
+            -1px 1px 0 #00CC00,
+            1px 1px 0 #00CC00,
+            3px 3px 0 #00CC00;
+        margin-bottom: 20px;
+    }
+
+    .reel {
+        /* リールサイズをさらに縮小 */
+        width: 50px;
+        /* 60pxから50pxに縮小 */
+        height: 70px;
+        /* 80pxから70pxに縮小 */
+        margin: 0 3px;
+        /* リール間のマージンを最小限に縮小 */
+        border-width: 2px;
+        /* 枠線を少し細くする */
+    }
+
+    .reel img {
+        /* 画像サイズもリールに合わせて調整 */
+        max-width: 90%;
+        max-height: 90%;
+    }
+
+    #message {
+        font-size: 22px;
+        /* 24pxから22pxに縮小 */
+        margin-top: 10px;
+        margin-bottom: 30px;
+    }
+
+    #startStopButton {
+        padding: 8px 16px;
+        /* ボタンのパディングを縮小 */
+        font-size: 18px;
+        /* ボタンのフォントサイズを縮小 */
+        border-width: 3px;
+        /* ボタンの枠線を調整 */
+    }
+
+    /* 動画オーバーレイのスタイルは維持 */
+    /* ... */
+}
+
+/* -------------------------------------- */
+/* 📺 YouTube動画オーバーレイの共通スタイル */
+/*  (全画面に表示され、他の要素より手前に出るようにする) */
+/* -------------------------------------- */
+#video-overlay {
+    position: fixed;
+    /* 画面に固定 */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    /* ★最も重要: 他の要素（タイトルなど）より手前に表示 */
+    background-color: black;
+    /* 動画が表示されるまでの背景色 */
+    display: none;
+    /* 初期状態で非表示 */
+}
+
+#youtube-player {
+    /* iframe自体は親の#video-overlayに合わせる */
+    width: 100%;
+    height: 100%;
+}
+
+/* BGMプレイヤー（画面外に配置。必要であれば維持） */
+#youtube-bgm-player {
+    position: absolute;
+    top: -100px;
+    left: -100px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
