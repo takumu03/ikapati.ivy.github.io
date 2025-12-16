@@ -21,16 +21,17 @@ const messageDisplay = document.getElementById('message');
 const PROMOTION_CHANCE = 0.3;
 // ... 既存の変数定義の下に追加 ...
 
-// --- 【MP4対応 変更箇所 1/5】 変数をMP4用に変更 ---
 const videoOverlay = document.getElementById('video-overlay');
-const mp4Player = document.getElementById('mp4-player'); // HTMLでIDを 'mp4-player' に変更している必要があります
+const youtubePlayer = document.getElementById('youtube-player');
 
-// 当たり動画のファイルパス (仮設定: 実際のものに置き換えてください)
-const MP4_WIN_PATH = 'images/(2) [SFM] ナワバリバトル - YouTube - Google Chrome 2025-12-16 13-21-31.mp4';
-// ハズレ動画のファイルパス (仮設定: 実際のものに置き換えてください)
-const MP4_LOSE_PATH = 'images/(2) Splash _ Splatoon Animation - YouTube - Google Chrome 2025-12-16 13-23-14.mp4';
-// ------------------------------------------------------------------
-const MP4_FIXED_DURATION_MS = 20000; // 20秒に設定
+// 当たり動画のYouTube ID (元: .../embed/Z3L3exgHDeQ?si=...)
+const YOUTUBE_WIN_ID = 'JNwdcH1aD28';
+
+// ハズレ動画のYouTube ID (元: .../embed/aoB5OROYHOg?si=...)
+const YOUTUBE_LOSE_ID = 'dtIpzERzNIw';
+
+// 動画の再生時間 (YouTubeプレイヤー側で再生が終わるのを検知できないため、時間で制御します)
+const YOUTUBE_DURATION_MS = 19000; // 19秒に設定 (動画の長さに合わせて調整)
 
 
 let isSpinning = false;
@@ -46,7 +47,7 @@ function spinReel(reel, index) {
         const randomIndex = Math.floor(Math.random() * symbols.length);
         const selectedPath = symbols[randomIndex];
 
-        // imgのsrc更新
+        // ★imgのsrc更新ではなく、textContentを更新
         reelImage.src = selectedPath;
 
         // data-valueには数字そのものを設定
@@ -73,6 +74,7 @@ function enableControls() {
     startStopButton.disabled = false;
 }
 
+// 【新しい関数の追加】
 /* WIN時のアナウンス処理を分離 */
 function announceWin(resultValue) {
     slotContainer.style.display = 'none';
@@ -80,7 +82,7 @@ function announceWin(resultValue) {
     if (resultValue === '7') {
         messageDisplay.textContent = '🎉🎉 777 MEGA JACKPOT!! 🎉🎉';
     } else {
-        messageDisplay.textContent = `🎯 WIN! ゾロ目です (${resultValue}${resultValue}${resultValue}) 🎯`;
+        messageDisplay.textContent = `おめでとう! ゾロ目です!`;
     }
     triggerSpecialEffect();
 
@@ -94,90 +96,20 @@ function announceWin(resultValue) {
     }, 3000); // 演出時間 (3000ms) 後に再表示
 }
 
-// --- 【MP4対応 変更箇所 2/5】 動画再生/停止関数に置き換え ---
+// YouTube埋め込みURLを生成する関数
+function generateYoutubeUrl(videoId) {
 
-// 動画再生を停止・リセットする関数 (MP4用)
+    // 'mute=1' を削除しました。
+    // 'playsinline=1' を追加して、モバイル環境でのインライン再生を助けます。
+    return `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&modestbranding=1&rel=0&playsinline=1`;
+}
+
+// 動画再生を停止・リセットする関数
 function stopAndResetVideo() {
-    mp4Player.pause();
-    mp4Player.currentTime = 0; // 再生時間を先頭に戻す
-    mp4Player.src = ''; // srcを空にして動画をリセット
+    // iframeのsrcを空にして動画を停止させ、オーバーレイを非表示にする
+    youtubePlayer.src = '';
     videoOverlay.style.display = 'none';
 }
-
-// 動画を再生する関数 (MP4用)
-function playVideo(path) {
-    mp4Player.src = path;
-    mp4Player.muted = false; // 音を出す (※ブラウザポリシーに注意)
-    videoOverlay.style.display = 'block';
-
-    // 古いイベントリスナーをクリア
-    mp4Player.onended = null;
-    mp4Player.oncanplay = null;
-
-    mp4Player.load();
-
-    // 動画のロードが完了し、再生可能になったら再生
-    mp4Player.oncanplay = () => {
-        mp4Player.play().catch(error => {
-            console.error("動画の自動再生に失敗しました。", error);
-            // 自動再生がブロックされた場合の代替処理（ミュートにするなど）
-            mp4Player.muted = true;
-            mp4Player.play();
-            // ユーザーにミュート解除を促すUIを表示することを推奨
-        });
-    };
-}
-
-// 動画再生終了時の後処理を分離
-function handleLoseResult() {
-    messageDisplay.textContent = '残念！昇格失敗...';
-
-    slotContainer.style.display = 'none';
-    startStopButton.style.display = 'none';
-
-    const MESSAGE_DISPLAY_DURATION = 2000;
-    setTimeout(() => {
-        slotContainer.style.display = 'flex';
-        startStopButton.style.display = 'block';
-        startStopButton.textContent = '再スタート';
-        enableControls();
-    }, MESSAGE_DISPLAY_DURATION);
-}
-
-
-// 昇格成功時のリール揃えとWINアナウンスを実行する関数
-function performPromotion() {
-    // リール値を取得 (checkResult関数内で定義されているresult変数はスコープ外のため、再取得が必要です)
-    const result1 = reels[0].getAttribute('data-value');
-    const result2 = reels[1].getAttribute('data-value');
-    const result3 = reels[2].getAttribute('data-value');
-
-    let targetResult = '';
-
-    // 昇格処理のロジックを再構築
-    const conditionA = (result1 === result2) && (result2 !== result3); // 1, 2が揃っている -> 3を揃える
-    const conditionB = (result1 === result3) && (result3 !== result2); // 1, 3が揃っている -> 2を揃える
-
-    if (conditionA) {
-        targetResult = result1;
-        reels[2].setAttribute('data-value', targetResult);
-        reels[2].querySelector('img').src = symbols[Number(targetResult)];
-    } else if (conditionB) {
-        targetResult = result1;
-        reels[1].setAttribute('data-value', targetResult);
-        reels[1].querySelector('img').src = symbols[Number(targetResult)];
-    } else { // 2, 3が揃っている -> 1を揃える
-        targetResult = result2;
-        reels[0].setAttribute('data-value', targetResult);
-        reels[0].querySelector('img').src = symbols[Number(targetResult)];
-    }
-
-    messageDisplay.textContent = '🔥 昇格成功！RUSH突入！ 🔥';
-    announceWin(targetResult);
-}
-
-// ------------------------------------------------------------------
-
 
 /*結果判定 (昇格チャンスの条件を「任意の2つ揃い」に変更)*/
 function checkResult() {
@@ -192,8 +124,15 @@ function checkResult() {
     }
 
     // 2. 昇格チャンスの判定: 3つのうち2つだけが揃っているか？
+    //    (A AND NOT B) OR (B AND NOT A) OR (C AND NOT A) の論理で判定
+
+    // 💡 組み合わせA: 1と2が揃っていて、3が違う (例: 7-7-3)
     const conditionA = (result1 === result2) && (result2 !== result3);
+
+    // 💡 組み合わせB: 1と3が揃っていて、2が違う (例: 7-3-7)
     const conditionB = (result1 === result3) && (result3 !== result2);
+
+    // 💡 組み合わせC: 2と3が揃っていて、1が違う (例: 3-7-7)
     const conditionC = (result2 === result3) && (result3 !== result1);
 
     // 2つ揃い（3つ揃いは除く）の昇格チャンス開始
@@ -201,6 +140,7 @@ function checkResult() {
 
         messageDisplay.textContent = 'CHANCE! 昇格を祈れ...';
 
+        // 昇格演出が始まる0.5秒前にボタンを無効化する
         disableControls();
 
         // 0.5秒待って動画再生を開始
@@ -208,25 +148,60 @@ function checkResult() {
 
             // 昇格チャンス判定
             if (Math.random() < PROMOTION_CHANCE) {
-                // *** 【MP4対応 変更箇所 3/5】 当たり動画の再生 ***
-                playVideo(MP4_WIN_PATH, true);
+                // *** 当たり動画の再生 ***
+                youtubePlayer.src = generateYoutubeUrl(YOUTUBE_WIN_ID);
+                videoOverlay.style.display = 'block';
 
-                // MP4はonendedイベントで結果表示を行うため、
-                // ここにあった setTimeout による時間制御は削除します。
-                // ★【修正点4: 30秒タイマーで結果処理を呼び出す】
+                // 動画再生時間後に結果表示
                 setTimeout(() => {
                     stopAndResetVideo();
-                    performPromotion(); // 昇格成功時の後処理へ
-                }, MP4_FIXED_DURATION_MS);
+
+
+                    // 💡 【昇格処理】揃えるリールを特定し、強制的に揃える
+                    //    どのリールがハズレかによって揃えるリールが変わります。
+                    let targetResult = '';
+                    if (conditionA) { // 1, 2が揃っている -> 3を揃える
+                        targetResult = result1;
+                        reels[2].setAttribute('data-value', targetResult);
+                        reels[2].querySelector('img').src = symbols[Number(targetResult)];
+                    } else if (conditionB) { // 1, 3が揃っている -> 2を揃える
+                        targetResult = result1;
+                        reels[1].setAttribute('data-value', targetResult);
+                        reels[1].querySelector('img').src = symbols[Number(targetResult)];
+                    } else { // 2, 3が揃っている -> 1を揃える
+                        targetResult = result2;
+                        reels[0].setAttribute('data-value', targetResult);
+                        reels[0].querySelector('img').src = symbols[Number(targetResult)];
+                    }
+
+                    messageDisplay.textContent = '昇格成功！';
+                    announceWin(targetResult);
+
+                }, YOUTUBE_DURATION_MS);
+
             } else {
                 // *** ハズレ動画の再生 ***
-                playVideo(MP4_LOSE_PATH);
+                youtubePlayer.src = generateYoutubeUrl(YOUTUBE_LOSE_ID);
+                videoOverlay.style.display = 'block';
 
-                // ★【修正点5: 30秒タイマーでハズレ処理を呼び出す】
+                // 動画再生時間後にハズレ表示
                 setTimeout(() => {
                     stopAndResetVideo();
-                    handleLoseResult(); // 昇格失敗時の後処理へ
-                }, MP4_FIXED_DURATION_MS);
+                    messageDisplay.textContent = '残念！昇格失敗...';
+
+                    slotContainer.style.display = 'none';
+                    startStopButton.style.display = 'none';
+
+                    const MESSAGE_DISPLAY_DURATION = 2000; // 2秒間メッセージを表示
+                    setTimeout(() => {
+                        // 💡 失敗後、スロットとボタンを再表示し、ボタンテキストをリセット
+                        slotContainer.style.display = 'flex';
+                        startStopButton.style.display = 'block';
+                        startStopButton.textContent = '再スタート';
+                        // 昇格失敗処理が終了し、再スタート可能になったらボタンを有効化
+                        enableControls();
+                    }, MESSAGE_DISPLAY_DURATION); // 2秒後に実行
+                }, YOUTUBE_DURATION_MS);
             }
         }, 500);
 
@@ -251,7 +226,6 @@ function triggerSpecialEffect() {
 
 /*スタート・ストップ*/
 startStopButton.onclick = function () {
-    // ... (スタート/ストップのロジックは変更なし) ...
     if (!isSpinning) {
         // --- スタート処理 ---
         isSpinning = true;
@@ -285,4 +259,6 @@ startStopButton.onclick = function () {
             }
         }
     }
+
+
 };
